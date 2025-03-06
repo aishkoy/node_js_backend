@@ -6,7 +6,41 @@ import Knex from "knex";
 
 const router = new Router();
 
-router.post('register', async (ctx) => {
+router.post('/login', async (ctx) => {
+    const knex = await Knex(ctx);
+    const {nickname, password} = ctx.request.body;
+
+    if(!nickname || !password) {
+        ctx.status = 404;
+        ctx.body = {
+            error: 'Nickname and password are required'
+        };
+        return;
+    }
+
+    const user = await knex('users')
+        .where({ nickname })
+        .first()
+
+    if(!user) {
+        ctx.status = 404;
+        ctx.body = {
+            error: 'User not found'
+        };
+        return;
+    }
+
+    if(password === user.password){
+        ctx.status = 200;
+        ctx.body = {message: "Login successfully", user};
+    } else{
+        ctx.status = 400;
+        ctx.body = {message: "Invalid Password"};
+    }
+
+})
+
+router.post('/register', async (ctx) => {
     const knex = await getKnex();
     const {nickname, fullName, password} = ctx.request.body;
 
@@ -121,7 +155,6 @@ router.get('/users', async (ctx) => {
 })
 
 router.post('/users', async (ctx) => {
-    const knex = await getKnex();
     console.log('post request to /users', ctx.request.body);
 
     ctx.body = ctx.request.body;
